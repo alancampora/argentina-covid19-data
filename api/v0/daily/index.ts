@@ -11,7 +11,7 @@ const provincesFormatter = {
 	Date: 'fecha',
 	'City of Buenos Aires': 'caba',
 	'Buenos Aires Province': 'buenos_aires',
-	Chaco: 'cacho',
+	Chaco: 'chaco',
 	Córdoba: 'cordoba',
 	Corrientes: 'corrientes',
 	'Entre Ríos': 'entre_rios',
