@@ -82,9 +82,16 @@ async function main(request: NowRequest, response: NowResponse) {
 	const formattedData = dates.reduce((acum, d, dateIndex) => {
 		const countriesDateData = countries.reduce((cAcum, cCur, cIndex) => {
 			if (cCur !== 'Date') {
-				cAcum[cCur] = {
-					confirmed: data.content[dateIndex][cIndex - 1],
-				};
+				R.includes(cCur, [
+					'total_infections',
+					'total_deaths',
+					'new_cases',
+					'new_deaths',
+				])
+					? (cAcum[cCur] = data.content[dateIndex][cIndex - 1])
+					: (cAcum[cCur] = {
+							confirmed: data.content[dateIndex][cIndex - 1],
+					  });
 			}
 			return cAcum;
 		}, {});
