@@ -1,6 +1,7 @@
 import { NowRequest, NowResponse } from '@now/node';
 import scrape from 'scrape-it';
 import R from 'ramda';
+import backup from './_utils/backup';
 
 const URL =
 	'https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Argentina';
@@ -69,80 +70,87 @@ const formatDate = date => {
 };
 
 async function main(request: NowRequest, response: NowResponse) {
-	const { data } = await scrape(URL, {
-		dates: {
-			selector: '.wikitable.mw-collapsible tbody tr th',
-			convert: x => {
-				// data will have provinces colums and date rows
-				const data = x.split('\n');
+	try {
+		const { data } = await scrape(URL, {
+			dates: {
+				selector: '.wikitable.mw-collapsible tbody tr th',
+				convert: x => {
+					// data will have provinces colums and date rows
+					const data = x.split('\n');
 
-				const rows = data.filter(hasNumber).map(formatDate).filter(date => date.length===10);
+					const rows = data
+						.filter(hasNumber)
+						.map(formatDate)
+						.filter(date => date.length === 10);
 
-				return rows;
+					return rows;
+				},
 			},
-		},
-		provinces: {
-			selector: '.wikitable.mw-collapsible tbody tr:nth-child(2) th',
-			convert: provinces => {
-				const data = provinces.split('\n').map(formatProvince);
-				return data;
+			provinces: {
+				selector: '.wikitable.mw-collapsible tbody tr:nth-child(2) th',
+				convert: provinces => {
+					const data = provinces.split('\n').map(formatProvince);
+					return data;
+				},
 			},
-		},
-		content: {
-			listItem: '.wikitable.mw-collapsible tbody tr td',
-			convert: tableCell => {
-				const replaceObject = x => (typeof x === 'object' ? '0' : x);
-				const replaceNumbersInParents = x => x.replace(/\s*\([0-9]*\)/g, '');
-				const replaceNumbersInBrackets = x => x.replace(/\s*\[.*\]/g, '');
-				const replaceNull = x => x.replace(/—/g, 0);
-				const formatNumber = R.compose(
-					Number,
-					replaceNull,
-					replaceNumbersInParents,
-					replaceNumbersInBrackets,
-					replaceObject,
-				);
+			content: {
+				listItem: '.wikitable.mw-collapsible tbody tr td',
+				convert: tableCell => {
+					const replaceObject = x => (typeof x === 'object' ? '0' : x);
+					const replaceNumbersInParents = x => x.replace(/\s*\([0-9]*\)/g, '');
+					const replaceNumbersInBrackets = x => x.replace(/\s*\[.*\]/g, '');
+					const replaceNull = x => x.replace(/—/g, 0);
+					const formatNumber = R.compose(
+						Number,
+						replaceNull,
+						replaceNumbersInParents,
+						replaceNumbersInBrackets,
+						replaceObject,
+					);
 
-				const formatted = formatNumber(tableCell);
+					const formatted = formatNumber(tableCell);
 
-				return formatted;
+					return formatted;
+				},
 			},
-		},
-	});
+		});
 
-	// creating one array with cells content for each day
-  console.log(data.content);
-	data.content = R.splitEvery(25, data.content);
+		// creating one array with cells content for each day
+		data.content = R.splitEvery(25, data.content);
 
-	const dates = data.dates;
-	const provinces = data.provinces;
-  console.log({dates,provinces})
+		const dates = data.dates;
+		const provinces = data.provinces;
 
-	const formattedData = dates.reduce((acum, d, dateIndex) => {
-		const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
-			if (pCur !== 'Date' && pCur !== 'Provinces' && pCur !== 'Cases') {
-				R.includes(pCur, [
-					'total_infections',
-					'total_deaths',
-					'new_cases',
-					'new_deaths',
-				])
-					? (pAcum[pCur] = data.content[dateIndex][pIndex])
-					: (pAcum[pCur] = {
-							confirmed: data.content[dateIndex][pIndex],
-					  });
-			}
-			return pAcum;
+    hola
+		const formattedData = dates.reduce((acum, d, dateIndex) => {
+			const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
+				if (pCur !== 'Date' && pCur !== 'Provinces' && pCur !== 'Cases') {
+					R.includes(pCur, [
+						'total_infections',
+						'total_deaths',
+						'new_cases',
+						'new_deaths',
+					])
+						? (pAcum[pCur] = data.content[dateIndex][pIndex])
+						: (pAcum[pCur] = {
+								confirmed: data.content[dateIndex][pIndex],
+						  });
+				}
+				return pAcum;
+			}, {});
+
+			acum[d] = {
+				...provincesDateData,
+			};
+
+			return acum;
 		}, {});
 
-		acum[d] = {
-			...provincesDateData,
-		};
-
-		return acum;
-	}, {});
-
-	response.status(200).send(formattedData);
+		response.status(200).send(formattedData);
+	} catch (e) {
+		console.log(`${e}: Getting data from backup`);
+		response.status(200).send(backup);
+	}
 }
 
 export default main;
