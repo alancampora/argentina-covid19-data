@@ -7,7 +7,7 @@ const URL =
 
 const hasNumber = x => x.match(/\d+\s+/g);
 
-const countriesFormatter = {
+const provincesFormatter = {
 	Date: 'fecha',
 	'City of Buenos Aires': 'caba',
 	'Buenos Aires Province': 'buenos_aires',
@@ -40,22 +40,22 @@ async function main(request: NowRequest, response: NowResponse) {
 		table: {
 			selector: '.wikitable.mw-collapsible tbody tr th',
 			convert: x => {
+				// data will have provinces colums and date rows
 				const data = x.split('\n');
 
-				let columns = data.filter(x => !hasNumber(x));
+				//provinces
+				let columns = data
+					.filter(x => !hasNumber(x))
+					.map(c => provincesFormatter[c]);
 
 				const rows = data.filter(hasNumber);
-
-				console.log({ columns, rows });
-
-				columns = columns.map(c => countriesFormatter[c]);
 
 				return [columns, rows];
 			},
 		},
 		content: {
 			listItem: '.wikitable.mw-collapsible tbody tr td',
-			convert: x => {
+			convert: tableCell => {
 				const replaceObject = x => (typeof x === 'object' ? '0' : x);
 				const replaceNumbersInParents = x => x.replace(/\s*\([0-9]*\)/g, '');
 				const replaceNumbersInBrackets = x => x.replace(/\s*\[.*\]/g, '');
@@ -68,7 +68,7 @@ async function main(request: NowRequest, response: NowResponse) {
 					replaceObject,
 				);
 
-				const formatted = formatNumber(x);
+				const formatted = formatNumber(tableCell);
 
 				return formatted;
 			},
@@ -77,27 +77,27 @@ async function main(request: NowRequest, response: NowResponse) {
 
 	data.content = R.splitEvery(24, data.content);
 
-	const [countries, dates] = data.table;
+	const [provinces, dates] = data.table;
 
 	const formattedData = dates.reduce((acum, d, dateIndex) => {
-		const countriesDateData = countries.reduce((cAcum, cCur, cIndex) => {
-			if (cCur !== 'Date') {
-				R.includes(cCur, [
+		const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
+			if (pCur !== 'Date') {
+				R.includes(pCur, [
 					'total_infections',
 					'total_deaths',
 					'new_cases',
 					'new_deaths',
 				])
-					? (cAcum[cCur] = data.content[dateIndex][cIndex - 1])
-					: (cAcum[cCur] = {
-							confirmed: data.content[dateIndex][cIndex - 1],
+					? (pAcum[pCur] = data.content[dateIndex][pIndex - 1])
+					: (pAcum[pCur] = {
+							confirmed: data.content[dateIndex][pIndex - 1],
 					  });
 			}
-			return cAcum;
+			return pAcum;
 		}, {});
 
 		acum[d] = {
-			...countriesDateData,
+			...provincesDateData,
 		};
 
 		return acum;
