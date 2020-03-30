@@ -121,7 +121,6 @@ async function main(request: NowRequest, response: NowResponse) {
 		const dates = data.dates;
 		const provinces = data.provinces;
 
-    hola
 		const formattedData = dates.reduce((acum, d, dateIndex) => {
 			const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
 				if (pCur !== 'Date' && pCur !== 'Provinces' && pCur !== 'Cases') {
