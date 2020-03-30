@@ -6,14 +6,9 @@
   "author": "Alan Campora <alan.campora@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@now/node": "^1.5.0",
-    "puppeteer": "^2.1.1"
+    "@now/node": "^1.5.0"
   },
   "dependencies": {
-    "@web-master/node-web-crawler": "^0.10.0",
-    "@web-master/node-web-scraper": "^0.10.0",
-    "chrome-aws-lambda": "^2.1.1",
-    "puppeteer-core": "^2.1.1",
     "ramda": "^0.27.0",
     "scrape-it": "^5.2.3"
   }
