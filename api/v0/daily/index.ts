@@ -18,6 +18,7 @@ const formatProvince = province => {
 		'Entre Ríos': 'entre_rios',
 		Jujuy: 'jujuy',
 		'La Pampa': 'la_pampa',
+		'La Rioja': 'la_rioja',
 		Mendoza: 'mendoza',
 		Misiones: 'misiones',
 		Neuquén: 'neuquen',
@@ -69,18 +70,22 @@ const formatDate = date => {
 
 async function main(request: NowRequest, response: NowResponse) {
 	const { data } = await scrape(URL, {
-		table: {
+		dates: {
 			selector: '.wikitable.mw-collapsible tbody tr th',
 			convert: x => {
 				// data will have provinces colums and date rows
 				const data = x.split('\n');
 
-				//provinces
-				let columns = data.filter(x => !hasNumber(x)).map(formatProvince);
+				const rows = data.filter(hasNumber).map(formatDate).filter(date => date.length===10);
 
-				const rows = data.filter(hasNumber).map(formatDate);
-
-				return [columns, rows];
+				return rows;
+			},
+		},
+		provinces: {
+			selector: '.wikitable.mw-collapsible tbody tr:nth-child(2) th',
+			convert: provinces => {
+				const data = provinces.split('\n').map(formatProvince);
+				return data;
 			},
 		},
 		content: {
@@ -106,22 +111,25 @@ async function main(request: NowRequest, response: NowResponse) {
 	});
 
 	// creating one array with cells content for each day
-	data.content = R.splitEvery(24, data.content);
+  console.log(data.content);
+	data.content = R.splitEvery(25, data.content);
 
-	const [provinces, dates] = data.table;
+	const dates = data.dates;
+	const provinces = data.provinces;
+  console.log({dates,provinces})
 
 	const formattedData = dates.reduce((acum, d, dateIndex) => {
 		const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
-			if (pCur !== 'Date') {
+			if (pCur !== 'Date' && pCur !== 'Provinces' && pCur !== 'Cases') {
 				R.includes(pCur, [
 					'total_infections',
 					'total_deaths',
 					'new_cases',
 					'new_deaths',
 				])
-					? (pAcum[pCur] = data.content[dateIndex][pIndex - 1])
+					? (pAcum[pCur] = data.content[dateIndex][pIndex])
 					: (pAcum[pCur] = {
-							confirmed: data.content[dateIndex][pIndex - 1],
+							confirmed: data.content[dateIndex][pIndex],
 					  });
 			}
 			return pAcum;
