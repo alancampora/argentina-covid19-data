@@ -22,13 +22,15 @@ export const formatProvince = province => {
 		'Santiago del Estero': 'sgo_del_stero',
 		'Tierra del Fuego': 'tierra_del_fuego',
 		Tucumán: 'tucuman',
-		'Total infections[a]': 'total_infections',
+		'Total infections': 'total_infections',
 		'Total deaths': 'total_deaths',
-		'New cases[a]': 'new_cases',
+		'New cases': 'new_cases',
 		'New deaths': 'new_deaths',
 	};
 
-	return provincesFormatter[province];
+	const formattedProvince = province.replace(/\s*\[.*\]/g, '');
+
+	return provincesFormatter[formattedProvince];
 };
 
 export const formatDate = date => {
@@ -58,4 +60,3 @@ export const formatDate = date => {
 
 	return `${year}-${formattedMonth}-${formattedDay}`;
 };
-
