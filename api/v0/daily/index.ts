@@ -2,72 +2,12 @@ import { NowRequest, NowResponse } from '@now/node';
 import scrape from 'scrape-it';
 import R from 'ramda';
 import backup from './_utils/backup';
+import { formatProvince, formatDate } from './_utils/formatter';
 
 const URL =
 	'https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Argentina';
 
 const hasNumber = x => x.match(/\d+\s+/g);
-
-const formatProvince = province => {
-	const provincesFormatter = {
-		Date: 'fecha',
-		'City of Buenos Aires': 'caba',
-		'Buenos Aires Province': 'buenos_aires',
-		Chaco: 'chaco',
-		Córdoba: 'cordoba',
-		Corrientes: 'corrientes',
-		'Entre Ríos': 'entre_rios',
-		Jujuy: 'jujuy',
-		'La Pampa': 'la_pampa',
-		'La Rioja': 'la_rioja',
-		Mendoza: 'mendoza',
-		Misiones: 'misiones',
-		Neuquén: 'neuquen',
-		'Río Negro': 'rio_negro',
-		Salta: 'salta',
-		'San Juan': 'san_juan',
-		'San Luis': 'san_luis',
-		'Santa Cruz': 'santa_cruz',
-		'Santa Fe': 'santa_fe',
-		'Santiago del Estero': 'sgo_del_stero',
-		'Tierra del Fuego': 'tierra_del_fuego',
-		Tucumán: 'tucuman',
-		'Total infections[a]': 'total_infections',
-		'Total deaths': 'total_deaths',
-		'New cases[a]': 'new_cases',
-		'New deaths': 'new_deaths',
-	};
-
-	return provincesFormatter[province];
-};
-
-const formatDate = date => {
-	const formatMonth = month => {
-		const monthsMapper = {
-			Jan: '01',
-			Feb: '02',
-			Mar: '03',
-			Apr: '04',
-			May: '05',
-			Jun: '06',
-			Aug: '08',
-			Sep: '09',
-			Oct: '10',
-			Nov: '11',
-			Dec: '12',
-		};
-		return monthsMapper[month];
-	};
-
-	const formatDay = day => (day < 10 ? `0${day}` : day);
-	const [day, month] = date.match(/\w+/g);
-	const year = '2020';
-
-	const formattedDay = formatDay(day);
-	const formattedMonth = formatMonth(month);
-
-	return `${year}-${formattedMonth}-${formattedDay}`;
-};
 
 async function main(request: NowRequest, response: NowResponse) {
 	try {
@@ -88,10 +28,7 @@ async function main(request: NowRequest, response: NowResponse) {
 			},
 			provinces: {
 				selector: '.wikitable.mw-collapsible tbody tr:nth-child(2) th',
-				convert: provinces => {
-					const data = provinces.split('\n').map(formatProvince);
-					return data;
-				},
+				convert: provinces => provinces.split('\n').map(formatProvince),
 			},
 			content: {
 				listItem: '.wikitable.mw-collapsible tbody tr td',
