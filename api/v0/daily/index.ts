@@ -9,6 +9,36 @@ const URL =
 
 const hasNumber = x => x.match(/\d+\s+/g);
 
+function buildOutput({ dates, provinces, content }) {
+	//content is an array of number entries [1,2,4,5,6,......] we need to know wich nunmbers are for each day
+	const numberOfColumns = 25; //provinces and total_infections total_deaths and so on
+	let numberEntries = R.splitEvery(numberOfColumns, content); //[[entries for day 1], [entries for day 2]]
+
+	return dates.reduce((acum, d, dateIndex) => {
+		const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
+			if (pCur !== 'Date' && pCur !== 'Provinces' && pCur !== 'Cases') {
+				R.includes(pCur, [
+					'total_infections',
+					'total_deaths',
+					'new_cases',
+					'new_deaths',
+				])
+					? (pAcum[pCur] = numberEntries[dateIndex][pIndex])
+					: (pAcum[pCur] = {
+							confirmed: numberEntries[dateIndex][pIndex],
+					  });
+			}
+			return pAcum;
+		}, {});
+
+		acum[d] = {
+			...provincesDateData,
+		};
+
+		return acum;
+	}, {});
+}
+
 async function main(request: NowRequest, response: NowResponse) {
 	try {
 		const { data } = await scrape(URL, {
@@ -52,37 +82,8 @@ async function main(request: NowRequest, response: NowResponse) {
 			},
 		});
 
-		// creating one array with cells content for each day
-		data.content = R.splitEvery(25, data.content);
-
-		const dates = data.dates;
-		const provinces = data.provinces;
-
-		const formattedData = dates.reduce((acum, d, dateIndex) => {
-			const provincesDateData = provinces.reduce((pAcum, pCur, pIndex) => {
-				if (pCur !== 'Date' && pCur !== 'Provinces' && pCur !== 'Cases') {
-					R.includes(pCur, [
-						'total_infections',
-						'total_deaths',
-						'new_cases',
-						'new_deaths',
-					])
-						? (pAcum[pCur] = data.content[dateIndex][pIndex])
-						: (pAcum[pCur] = {
-								confirmed: data.content[dateIndex][pIndex],
-						  });
-				}
-				return pAcum;
-			}, {});
-
-			acum[d] = {
-				...provincesDateData,
-			};
-
-			return acum;
-		}, {});
-
-		response.status(200).send(formattedData);
+		const output = buildOutput(data);
+		response.status(200).send(output);
 	} catch (e) {
 		console.log(`${e}: Getting data from backup`);
 		response.status(200).send(backup);
