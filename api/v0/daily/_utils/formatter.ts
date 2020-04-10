@@ -1,6 +1,4 @@
-export const formatProvince = province => {
-	const provincesFormatter = {
-		Date: 'fecha',
+	export const provincesMapper = {
 		'BA (C)': 'caba',
 		'BA (P)': 'buenos_aires',
 		CH: 'chaco',
@@ -10,7 +8,7 @@ export const formatProvince = province => {
 		CR: 'corrientes',
 		ER: 'entre_rios',
     FO: 'formosa',
-		JJ: 'jujuy',
+		JY: 'jujuy',
 		LP: 'la_pampa',
 		LR: 'la_rioja',
 		MD: 'mendoza',
@@ -25,15 +23,24 @@ export const formatProvince = province => {
 		SE: 'sgo_del_stero',
 		TF: 'tierra_del_fuego',
 		TU: 'tucuman',
+	};
+
+export const formatProvince = province => {
+
+	const formattedProvince = province.replace(/\s*\[.*\]/g, '');
+
+	return provincesMapper[formattedProvince];
+};
+
+export const totalsMapper = {
 		Total: 'total_infections',
 		D: 'total_deaths',
 		NC: 'new_cases',
 		ND: 'new_deaths',
 	};
 
-	const formattedProvince = province.replace(/\s*\[.*\]/g, '');
-
-	return provincesFormatter[formattedProvince];
+export const formatTotals = total => {
+		return totalsMapper[total];
 };
 
 export const formatDate = date => {
