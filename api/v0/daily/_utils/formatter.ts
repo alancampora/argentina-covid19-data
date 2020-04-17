@@ -1,6 +1,6 @@
 	export const provincesMapper = {
-		'BA (C)': 'caba',
-		'BA (P)': 'buenos_aires',
+		'BA-C': 'caba',
+		'BA-P': 'buenos_aires',
 		CH: 'chaco',
     CA: 'catamarca',
     CB: 'chubut',
