@@ -11,11 +11,11 @@ import {
 } from './_utils/formatter';
 
 const URL =
-	'https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Argentina';
+	'https://en.wikipedia.org/wiki/Template:COVID-19_pandemic_data/Argentina_medical_cases';
 
 const hasNumber = x => x.match(/\d+\s+/g);
 
-function buildOutput({ dates, provinces, content, totals }) {
+function buildOutput({ dates, provinces, content, totals }: any) {
 	//content is an array of number entries [1,2,4,5,6,......] we need to know wich nunmbers are for each day
 	const numberOfColumns =
 		Object.keys(provincesMapper).length + Object.keys(totalsMapper).length; //provinces and total_infections total_deaths and so on
